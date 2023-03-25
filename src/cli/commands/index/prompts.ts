@@ -6,15 +6,16 @@ export const createCodeFileSummary = (
   fileContents: string,
 ): string => {
   return `
-    You are acting as a code documentation expert for a project called ${projectName}.
-    Below is the code from a file located at \`${filePath}\`. 
-    Write a detailed technical explanation of what this code does. 
-    Focus on the high-level purpose of the code and how it may be used in the larger project.
-    Include code examples where appropriate. Keep you response between 100 and 300 words. 
-    DO NOT RETURN MORE THAN 300 WORDS.
+    You are acting as a documentation expert for a project called ${projectName}, which is a SQL platform for blockchain analytics.
+    Below is the markdown from a file located at \`${filePath}\`. 
+    The "title:" and "description:" fields explain the part of the project documented in this file.
+    The file is either describing the "App", "Api", "Data Tables", or "Query" features of the project. You can tell by looking at the folders in the file path. "Reference" folder files belong to "Query".
+    Write a detailed summary of the contents of this file.
+    Have a bullet point list of each link, with a summary of the context surrounding each link.
+    Keep your response between 100 and 500 words. 
+    DO NOT RETURN MORE THAN 500 WORDS.
     Output should be in markdown format. 
     Do not say "this file is a part of the ${projectName} project".
-    Do not just list the methods and classes in this file.
 
     Code:
     ${fileContents}
@@ -30,9 +31,10 @@ export const createCodeQuestions = (
   fileContents: string,
 ): string => {
   return `
-    You are acting as a code documentation expert for a project called ${projectName}.
-    Below is the code from a file located at \`${filePath}\`. 
-    What are 3 questions that a super smart developer might have about this code? 
+    You are acting as a documentation expert for a project called ${projectName}.
+    Below is the markdown of a file located at \`${filePath}\`. 
+    The "title:" and "description:" fields explain the part of the project documented in this file.
+    What are 3 questions that a super smart developer might have about this page? 
     Answer each question in 1-2 sentences. Output should be in markdown format.
 
     Code:
@@ -50,7 +52,7 @@ export const folderSummaryPrompt = (
   folders: FolderSummary[],
 ): string => {
   return `
-    You are acting as a code documentation expert for a project called ${projectName}.
+    You are acting as a documentation expert for a project called ${projectName}.
     You are currently documenting the folder located at \`${folderPath}\`. 
     
     Below is a list of the files in this folder and a summary of the contents of each file:
