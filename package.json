@@ -1,6 +1,6 @@
 {
   "name": "@context-labs/autodoc",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "autodoc",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,6 +28,7 @@
   "license": "MIT",
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.2",
+    "@types/istextorbinary": "^2.3.1",
     "chalk": "^5.2.0",
     "cli-progress": "^3.12.0",
     "commander": "^10.0.0",

@@ -108,7 +108,7 @@ You're now ready to query documentation for the Autodoc repository:
 
 <img src="https://raw.githubusercontent.com/context-labs/autodoc/master/assets/query.gif" alt="Markdownify" width="60%" style="border-radius:24px;">
 
-This is the core querying experience. It's very basic right now, with plenty of room of improvement. If you're interested in improving the Autodoc CLI querying experience, checkout this issue :)
+This is the core querying experience. It's very basic right now, with plenty of room of improvement. If you're interested in improving the Autodoc CLI querying experience, checkout [this issue](https://github.com/context-labs/autodoc/issues/11).
 
 ### Indexing
 Follow the steps below to generate documentation for your own repository using Autodoc.
@@ -130,6 +130,8 @@ doc init
 You will be prompted to enter the name of your project, GitHub url, and select which GPT models you have access to. If you aren't sure which models you have access to, select the first option. This command will generate an `autodoc.config.json` file in the root of your project to store the values. This file should be checked in to git.
 
 **Note:** Do not skip entering these values or indexing may not work.
+
+**Prompt Configuration:** You'll find prompt directions specified in `prompts.ts`, with some snippets customizable in the `autodoc.config.json`. The current prompts are developer focused and assume your repo is code focused. We will have more reference templates in the future.
 
 Run the `index` command:
 ```bash
