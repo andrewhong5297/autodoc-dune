@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Md5 } from 'ts-md5';
 import { OpenAIChat } from 'langchain/llms';
 import { encoding_for_model } from '@dqbd/tiktoken';
 import { APIRateLimit } from '../../utils/APIRateLimit.js';
@@ -69,6 +70,25 @@ export const processRepository = async (
     linkHosted,
   }): Promise<void> => {
     const content = await fs.readFile(filePath, 'utf-8');
+
+    /**
+     * Calculate the checksum of the file content
+     */
+    const newChecksum = await calculateChecksum([content]);
+
+    /**
+     * if an existing .json file exists,
+     * it will check the checksums and decide if a reindex is needed
+     */
+    const reindex = await shouldReindex(
+      path.join(outputRoot, filePath.substring(0, filePath.lastIndexOf('\\'))),
+      fileName.replace(/\.[^/.]+$/, '.json'),
+      newChecksum,
+    );
+    if (!reindex) {
+      return;
+    }
+
     const markdownFilePath = path.join(outputRoot, filePath);
     const url = githubFileUrl(repositoryUrl, inputRoot, filePath, linkHosted);
     const summaryPrompt = createCodeFileSummary(
@@ -140,6 +160,7 @@ export const processRepository = async (
           url,
           summary,
           questions,
+          checksum: newChecksum,
         };
 
         const outputPath = getFileName(markdownFilePath, '.', '.json');
@@ -195,6 +216,25 @@ export const processRepository = async (
     const contents = (await fs.readdir(folderPath)).filter(
       (fileName) => !shouldIgnore(fileName),
     );
+
+    /**
+     * Get the checksum of the folder
+     */
+    const newChecksum = await calculateChecksum(contents);
+
+    /**
+     * If an existing summary.json file exists,
+     * it will check the checksums and decide if a reindex is needed
+     */
+    const reindex = await shouldReindex(
+      folderPath,
+      'summary.json',
+      newChecksum,
+    );
+    if (!reindex) {
+      return;
+    }
+
     // eslint-disable-next-line prettier/prettier
     const url = githubFolderUrl(repositoryUrl, inputRoot, folderPath, linkHosted);
     const allFiles: (FileSummary | null)[] = await Promise.all(
@@ -259,6 +299,7 @@ export const processRepository = async (
         folders: folders.filter(Boolean),
         summary,
         questions: '',
+        checksum: newChecksum,
       };
 
       const outputPath = path.join(folderPath, 'summary.json');
@@ -366,3 +407,54 @@ export const processRepository = async (
    */
   return models;
 };
+
+/**
+ * Calculates the checksum of all the files in a folder
+ */
+async function calculateChecksum(contents: string[]): Promise<string> {
+  const checksums: string[] = [];
+  for (const content of contents) {
+    const checksum = Md5.hashStr(content);
+    checksums.push(checksum);
+  }
+  const concatenatedChecksum = checksums.join('');
+  const finalChecksum = Md5.hashStr(concatenatedChecksum);
+  return finalChecksum;
+}
+
+/**
+ * Checks if a summary.json file exists.
+ * If it does, compares the checksums to see if it
+ * needs to be re-indexed or not.
+ */
+
+async function shouldReindex(
+  contentPath: string,
+  name: string,
+  newChecksum: string,
+): Promise<boolean> {
+  const jsonPath = path.join(contentPath, name);
+
+  let summaryExists = false;
+  try {
+    await fs.access(jsonPath);
+    summaryExists = true;
+  } catch (error) {}
+
+  if (summaryExists) {
+    const fileContents = await fs.readFile(jsonPath, 'utf8');
+    const fileContentsJSON = JSON.parse(fileContents);
+
+    const oldChecksum = fileContentsJSON.checksum;
+
+    if (oldChecksum === newChecksum) {
+      console.log(`Skipping ${jsonPath} because it has not changed`);
+      return false;
+    } else {
+      console.log(`Reindexing ${jsonPath} because it has changed`);
+      return true;
+    }
+  }
+  //if no summary then generate one
+  return true;
+}
